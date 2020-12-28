@@ -1,5 +1,6 @@
 module CBFV
 
-include("ProcessComposition.jl")
+include("GlobalConst.jl")
+include("ProcessFormulaInput.jl")
 
 end
