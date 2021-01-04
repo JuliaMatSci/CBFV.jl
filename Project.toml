@@ -3,6 +3,10 @@ uuid = "e079e57c-70e8-4f61-a09b-990e8be4fed3"
 authors = ["Stefan Bringuier <stefanbringuier@gmail.com> and contributors"]
 version = "0.1.0"
 
+[deps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+ProgressBars = "49802e3a-d2f1-5c88-81d8-b72133a6f568"
+
 [compat]
 julia = "1.5"
 

@@ -11,7 +11,7 @@ and the original python source code can be found here:
 > (https://github.com/anthony-wang/BestPractices/tree/master/notebooks/CBFV)
 
 ## Citation
-Pleae cite the following when if you use this package in your work:
+Pleae cite the following when and if you use this package in your work:
 
 ```bibtex
 @misc{Bringuier2021CBFV.jl,

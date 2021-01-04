@@ -32,13 +32,13 @@ end # function replacechar
 """
     setdefaultdict(formula)
 
-Initializes the default dictionary of type Dict{String,Int}. Each element is set to 0.
+Initializes the default dictionary of type Dict{String,Float64}. Each element is set to 0.
 
 """ function setdefaultdict(formula::String)
-    defaultdict = Dict{String,Int}()
+    defaultdict = Dict{String,Float64}()
     elements = findall(r"([A-Z][a-z]*)",formula)
     for e in elements
-        defaultdict[formula[e]] = 0
+        defaultdict[formula[e]] = 0.00e0
     end
     return defaultdict
 end # function getdefaultdict
@@ -56,20 +56,20 @@ keyword argument
 -`molfactor::Integer`: the repeating occurance of molecular complexes, e.g., XX(PO)3
 
 # Returns
--`elementalamount::Dict{String,Integer}`
+-`elementalamount::Dict{String,Float64}`
 
-""" function getrepresentation(formulaunit;molfactor=1)
+""" function getrepresentation(formulaunit::String;molfactor=1.00e0)
 
     elementalamount = setdefaultdict(formulaunit);
     #Assign amount to each element in formula
     elementgroups = findall(r"([A-Z][a-z]*)\s*([-*\.\d]*)",formulaunit);
     for eg in elementgroups
-        el,amt = map(String,match(r"([A-Z][a-z]?)(\d*\d?)",formulaunit[eg]).captures)
-        iamt = isempty(amt) ? 1 : parse(Int,amt)
+        el,amt = map(String,match(r"([A-Z][a-z]?)([-*\.\d]*)?",formulaunit[eg]).captures)
+        famt = isempty(amt) ? 1.00e0 : parse(Float64,amt)
         if el ∈ allowedperiodictable
-            elementalamount[el] += iamt*molfactor
+            elementalamount[el] += famt*molfactor
         else
-            error("$(el) in chemical formula $(formulaunit) is not a valid symbol")
+            elementwarn(el,formulaunit)
         end
     end
     return elementalamount
@@ -91,19 +91,17 @@ If formula contains molecular units in the form of AB(CD3)2, rewrite as ABC2D6.
     molecularunits = eachmatch(r"\(([^\(\)]+)\)\s*([\.\d]*)",formula)
     for molunit in molecularunits
         molecule,repeat = map(String,molunit.captures)
-        irepeat = parse(Int,repeat)
+        frepeat = isempty(repeat) ? 1.00e0 : parse(Float64,repeat)
         elementgroups = findall(r"([A-Z][a-z]*)\s*([-*\.\d]*)",molecule);
         molrewrite = ""
 
         for eg in elementgroups
             element,amount = map(String,match(r"([A-Z][a-z]?)(\d*\d?)",molecule[eg]).captures)
-            iamount = isempty(amount) ? 1 : parse(Int,amount)
-            iamount *=  irepeat
-            molrewrite *= "$(element)$(iamount)"
+            famount = isempty(amount) ? 1.00e0 : parse(Float64,amount)
+            famount *=  frepeat
+            molrewrite *= "$(element)$(famount)"
         end
 
-        elements,amount = map(String,match(r"([A-Z][a-z]?)(\d*\d?)",molecule).captures)
-        amount *= repeat
         modformula = replace(modformula,molunit.match => molrewrite)
     end
     return modformula
@@ -129,7 +127,8 @@ Creates a dictionary of elements and stoichiometry for compound formula. If form
     if molecularunits ≠ nothing
         modformula = rewriteformula(modformula)
     end
-    return getrepresentation(modformula)
+    formulardict = getrepresentation(modformula)
+    return formuladict        
 end # function parseformula
 
 parseformula(formula::Symbol) = parseformula(String(formula))
