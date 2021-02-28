@@ -1,6 +1,7 @@
 # see LICENSE
 
-global const rootdir = @__DIR__
+global const rootsrc = @__DIR__
+global const rootdir = joinpath(@__DIR__,"../")
 
 global const allowedperiodictable = (
 "H","He","Li","B","Be","C","N","O","F","Ne",

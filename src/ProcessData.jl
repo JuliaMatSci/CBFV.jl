@@ -1,7 +1,8 @@
 # see LICENSE
 
 """
-
+    Handle cases where compound can't be processed.
+    
 """ function removeunsupported(datainput::DataFrame,elementsproperties::AbstractArray)
     
 end  # function removeunsupported
@@ -68,7 +69,7 @@ Take a DataFrame datatype and return an Array datatype with additional data.
         
         extractedproperties = extractproperties(elementsproperties,elements)
 
-        # Catch if element was not in property database
+        # TODO: Catch if element was not in property database
         if elements == extractedproperties[:,1]
         end
         processdata[i,1:end] = [elements,amount,extractedproperties,[target]]
@@ -122,7 +123,7 @@ of the entire database.
     elementproperties = Dict(:symbols=>elementsymbols,
                              :index=>elementindex,
                              :missing=>elementmissing)
-    # Replace missing with mean or zero, how was this done in python ver.
+    # TODO: Replace missing with mean or zero, how was this done in python ver.
     arrayrepresentation = convert(Array,data)
 
     return elementproperties, arrayrepresentation

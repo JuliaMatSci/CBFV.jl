@@ -127,7 +127,7 @@ Creates a dictionary of elements and stoichiometry for compound formula. If form
     if molecularunits ≠ nothing
         modformula = rewriteformula(modformula)
     end
-    formulardict = getrepresentation(modformula)
+    formuladict = getrepresentation(modformula)
     return formuladict        
 end # function parseformula
 
