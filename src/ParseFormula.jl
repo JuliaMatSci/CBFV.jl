@@ -1,5 +1,27 @@
 # see LICENSE
 
+
+"""     
+    stripamt(element::String)
+
+Strip the amount associated with element.
+
+!!! Note
+    Doesn't handle fractional amounts.
+""" stripamt(element::AbstractString) = begin
+    charints = ['0','1','2','3','4','5','6','7','8','9']
+    strip(element,charints)
+end 
+
+"""     
+    splitcap(formula::String)
+
+Split a formula by capital letters.
+""" splitcap(formula::String) = begin
+    regex =  r"(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])"
+    split(formula,regex)
+end
+
 """
     replacechar(formula)
 

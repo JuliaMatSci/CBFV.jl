@@ -1,5 +1,6 @@
 using CBFV
 using Test
+using DataFrames
 
 @testset "CBFV.jl" begin
 
@@ -62,10 +63,40 @@ using Test
     @testset "Databases.jl functions" begin
             @test typeof(CBFV.generate_available_databases()) == Dict{String,String} 
             # @test CBFV.show_available_databases() == nothing
-    end
+    end # Databases.jl testset
 
     @testset "ProcessData.jl functions" begin
         @test typeof(CBFV.getelementpropertydatabase()) == DataFrame
-    end
+        begin
+            eletest = DataFrame(:element => ["Pr","Ni","Ru"],
+                                 :C0 => [58.7, 257.5, 562.1],
+                                 :C1 => [25.6, 171.8, 183.8],
+                                 :C2 => [0.0, 0.0, 0.0],
+                                 :C3 => [0.0, 0.0, 0.0])
+            
+            
+            # NOTE: Ficticious materials
+            inputtest = DataFrame(:formula=>["PrNi2","PrNi","PrRuNi3"],:target=>[1000.0,1200.0,2400.0])
+            eleinfo,processdata = CBFV.processinput(inputtest,eletest)
+            @test typeof(eleinfo) == Dict{Symbol,Vector}
+
+            
+            @test processdata[1][:elements] == ["Pr","Ni"]
+            @test processdata[1][:amount] == [1.0,2.0]
+            @test processdata[2][:eleprops] == ["Pr" 58.7 25.6 0.0 0.0;"Ni" 257.5 171.8 0.0 0.0]
+            @test processdata[2][:target] == 1200.0
+            @test processdata[3][:elements] == ["Pr","Ni","Ru"]
+            @test processdata[3][:amount] == [1.0,3.0,1.0]
+
+            inputtest = DataFrame(:formula=>["PrX2","PrNi","PrRuQ3"],:target=>[1000.0,1200.0,2400.0])
+            eleinfo,processdata = CBFV.processinput(inputtest,eletest)
+
+            @test length(processdata) == 1
+            @test processdata[1][:elements] == ["Pr","Ni"]
+            @test processdata[1][:amount] == [1.0,1.0]
+
+            @test !isnothing(CBFV.processinput(inputtest))
+        end
+    end # ProcessData.jl testset
     
 end
