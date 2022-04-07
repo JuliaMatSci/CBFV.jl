@@ -1,6 +1,6 @@
 using CBFV
 using Test
-using DataFrames
+using CSV, DataFrames
 
 @testset "CBFV.jl" begin
 
@@ -77,26 +77,35 @@ using DataFrames
             
             # NOTE: Ficticious materials
             inputtest = DataFrame(:formula=>["PrNi2","PrNi","PrRuNi3"],:target=>[1000.0,1200.0,2400.0])
-            eleinfo,processdata = CBFV.processinput(inputtest,eletest)
-            @test typeof(eleinfo) == Dict{Symbol,Vector}
+            colnames,processdata = CBFV.processinputdata(inputtest,eletest)
+            @test typeof(colnames) == Vector{String}
 
             
             @test processdata[1][:elements] == ["Pr","Ni"]
             @test processdata[1][:amount] == [1.0,2.0]
-            @test processdata[2][:eleprops] == ["Pr" 58.7 25.6 0.0 0.0;"Ni" 257.5 171.8 0.0 0.0]
+            @test processdata[2][:eleprops] == [58.7 25.6 0.0 0.0; 257.5 171.8 0.0 0.0]
             @test processdata[2][:target] == 1200.0
             @test processdata[3][:elements] == ["Pr","Ni","Ru"]
             @test processdata[3][:amount] == [1.0,3.0,1.0]
 
             inputtest = DataFrame(:formula=>["PrX2","PrNi","PrRuQ3"],:target=>[1000.0,1200.0,2400.0])
-            eleinfo,processdata = CBFV.processinput(inputtest,eletest)
+            eleinfo,processdata = CBFV.processinputdata(inputtest,eletest)
 
             @test length(processdata) == 1
             @test processdata[1][:elements] == ["Pr","Ni"]
             @test processdata[1][:amount] == [1.0,1.0]
 
-            @test !isnothing(CBFV.processinput(inputtest))
+            @test !isnothing(CBFV.processinputdata(inputtest))
         end
     end # ProcessData.jl testset
-    
+
+    @testset "Featurization.jl functions" begin
+        d = DataFrame(:formula=>["Tc1V1","Cu1Dy1","Cd3N2"],:target=>[248.539,66.8444,91.5034])
+        featdb = CBFV.generatefeatures(d,returndataframe=true)
+        testdb = CSV.File("pycbfv_test_data.csv") |> DataFrame
+        @test length(names(featdb[!,Not([:target,:formula])])) == length(names(testdb))
+        @testset "Column $n" for n in names(testdb)
+            @test testdb[!,n] ≈ featdb[!,n]
+        end
+    end # Featurization.jl testset
 end

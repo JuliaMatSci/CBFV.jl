@@ -18,7 +18,7 @@ end
 
 Split a formula by capital letters.
 """ splitcap(formula::String) = begin
-    regex =  r"(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])"
+    regex =  r"(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z][0-9])"
     split(formula,regex)
 end
 
