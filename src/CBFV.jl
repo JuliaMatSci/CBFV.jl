@@ -5,10 +5,10 @@ using ProgressBars
 using CSV
 using DataFrames
 
-#export FileName
-#export processelementdatabase
-#export processinputdata
-#export generatefeatures
+export FileName
+export processelementdatabase
+export processinputdata
+export generatefeatures
 
 include("GlobalConst.jl")
 include("Types.jl")

@@ -12,9 +12,12 @@ makedocs(;
         assets=String[],
     ),
     pages=[
-        "Home" => "index.md",
+        "Intro" => "index.md",
+        "Examples" => "examples.md",
+        "API" => "api.md",
     ],
 )
+Modules = [CBFV]
 
 deploydocs(;
     repo="github.com/stefanbringuier/CBFV.jl",

@@ -34,6 +34,6 @@ function elementwarn(element,formula;row=nothing)
 end  # function elementwarn
 
 function databaseerror(name::String)
-    error("The database or file name $(string) could not be found or loaded")
+    error("The database or file name $(name) could not be found or loaded")
     return nothing
 end  # function databaseerror
