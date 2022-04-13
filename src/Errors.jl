@@ -1,5 +1,12 @@
 # see LICENSE
 
+function checkifempty(dataframe::DataFrame)
+    if  isempty(dataframe)
+        error("Dataframe is empty!")
+    end
+    return nothing
+end
+
 function checkdataframe(dataframe::DataFrame)
     if !hasproperty(dataframe,:formula) && !hasproperty(dataframe,:target)
         error("Dataframe is missing columns :formula or :target")

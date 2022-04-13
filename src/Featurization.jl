@@ -19,7 +19,7 @@ vector of column names for a database.
 """
 function combinefeatures(features::AbstractArray, extras::DataFrame)
     if checkcombineallowed(extras)
-        extrasarry = Tables.matrix(extras)
+        extrasarry = Array(extras)
         newfeatures = hcat(features, extrasarry)
     else
         newfeatures = features
@@ -30,7 +30,7 @@ end  # function combinefeatures
 combinefeatures(features::AbstractArray, featnames::Vector, extras::DataFrame) = begin
 
     if checkcombineallowed(extras)
-        extrasarry = Tables.matrix(extras)
+        extrasarry = Array(extras)
         newfeatures = hcat(features, extrasarry)
         combfeatnames = vcat(featnames, names(extras))
     else
@@ -129,11 +129,10 @@ function constructfeaturedataframe(featcolnames::Vector{String},
     dictfeatnames = Dict{String,Vector}()
 
     if extrafeatures[1]
-        #combfeatures,combinedfeatnames = combinefeatures(features, featnames, extrafeatures[2])
-        #for (i, n) in enumerate(combinedfeatnames)
-        #    dictfeatnames[n] = combfeatures[:,i]
-        #end
-        @info "The combine feature is not correctly implemented and is being skipped!"
+        combfeatures,combinedfeatnames = combinefeatures(features, featnames, extrafeatures[2])
+        for (i, n) in enumerate(combinedfeatnames)
+            dictfeatnames[n] = combfeatures[:,i]
+        end
     else
         for (i, n) in enumerate(featnames)
             dictfeatnames[n] = features[:, i]
@@ -206,8 +205,9 @@ function generatefeatures(data::DataFrame;
         sumfeatures)
 
     # Extra features from original data
-    extra_df = data[!, Not([:formula, :target])]
-    extrafeatures = dropduplicate && !isempty(extra_df) ? unique(extra_df) : extra_df
+    extra_df = dropduplicate ? unique(data) : data
+    extrafeatures = extra_df[!, Not([:formula, :target])]
+    if combine checkifempty(extrafeatures) end
 
     if returndataframe
         generatedataframe = constructfeaturedataframe(featcolnames, features, (combine, extrafeatures), sumfeatures)
@@ -216,20 +216,22 @@ function generatefeatures(data::DataFrame;
         return generatedataframe
     else
         if combine
-            #combinefeatures(features, extrafeatures)
-            @info "The combine feature is not correctly implemented and is being skipped!"
+            combinefeatures(features, extrafeatures)
         end
         return formulae, features, targets
     end
 
 end  # function generatefeaturesdata 
 
+# Issue #4 TODO: Work in support for custom element data sets. Requires
+# working back through `generatefeatures`-> `processinputdata` -> ....
+# generatefeatures(data::DataFrame, elementdata::FileName; kwargs...) = begin
+#    generatefeatures(data, elementdata=elementdata, kwargs...)
+# end
+
 generatefeatures(dataname::String; kwargs...) = begin
     # Digest data file before processing
     data = readdatabasefile(dataname)::DataFrame
-    generatefeatures(data, kwargs...)
+    generatefeatures(data; kwargs...)
 end
 
-generatefeatures(data::Union{String,DataFrame}, elementdata::FileName; kwargs...) = begin
-    generatefeatures(data, elementdata=elementdata.fullpath, kwargs...)
-end

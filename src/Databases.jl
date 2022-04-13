@@ -26,13 +26,14 @@ show_available_databases() = show(keys(generate_available_databases()))
 Returns DataFrame of an elemental database file in [databases/](databases/)
 
 # Arguments
-- `pathtofile::String`: path to the CSV formatted file to read.
+- `pathtofile::String`: path to the CSV formatted file to read
 
 # Returns
 - `data::DataFrame`: the dataframe representation of the csv file.
 """
-function readdatabasefile(pathtofile::String)
+function readdatabasefile(pathtofile::AbstractString;
+                          stringtype::Type{T}=String) where T<:Union{String,InlineString}
     # Use CSV and dataframes
-    data = CSV.File(pathtofile) |> DataFrame
+    data = CSV.File(pathtofile,stringtype=stringtype) |> DataFrame
     return data
 end  # function readdatabasefile

@@ -8,7 +8,7 @@ Strip the amount associated with element.
 
 !!! Note
     Doesn't handle fractional amounts.
-""" stripamt(element::AbstractString) = begin
+""" stripamt(element::String) = begin
     charints = ['0','1','2','3','4','5','6','7','8','9']
     strip(element,charints)
 end 

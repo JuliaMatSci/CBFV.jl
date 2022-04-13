@@ -23,6 +23,8 @@ rename!(data,Dict("name"=>"formula","bandgap_eV"=>"target"))
 features = generatefeatures(data)
 ```
 
+The thing to note is you most likely will still want to post-process the generated feature data using some transformation to scale the data. The [StatsBase.jl](https://juliastats.org/StatsBase.jl/stable/transformations/) package provides some basic fetures for this, although the input needs to be `AbstractMatrix{<:Real}` rather than a `DataFrame`. This can be achieved using `generatefeatures(data,returndataframe=false)`
+
 ## Supported Featurization Schemes
 
 As with the orignal CBFV python package the following element databases are available:
@@ -51,7 +53,7 @@ Pleae cite the following when and if you use this package in your work:
     author = {Bringuier, Stefan},
     year = {2021},
     title = {CBFV.jl - A simple composition based feature vectorization Julia utility},
-    url = {https://github.com/stefanbringuier/CBFV.jl},
+    url = {https://github.com/JuliaMatSci/CBFV.jl},
 }
 ```
 In addition, please also consider citing the original python implementation and tutorial paper.
