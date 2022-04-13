@@ -15,7 +15,7 @@ and the original python source code(s) can be found here:
 
 The input data set should have a least two columns with the header/names `formula` and `target`.
 
-```@example
+```julia
 using DataFrames
 using CBFV
 data = DataFrame("name"=>["Rb2Te","CdCl2","LaN"],"bandgap_eV"=>[1.88,3.51,1.12])
