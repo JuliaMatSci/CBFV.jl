@@ -21,4 +21,5 @@ Modules = [CBFV]
 
 deploydocs(;
     repo="github.com/JuliaMatSci/CBFV.jl",
+    devbranch="master"
 )
