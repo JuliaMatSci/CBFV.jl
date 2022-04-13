@@ -1,4 +1,4 @@
-# CBFV.jl : A simple composition-based feature vectorization Julia utility
+# CBFV.jl : A simple composition-based feature vectorization utility in Julia
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliamatsci.github.io/CBFV.jl/stable) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://juliamatsci.github.io/CBFV.jl/dev) [![Build Status](https://github.com/juliamatsci/CBFV.jl/workflows/CI/badge.svg)](https://github.com/JuliaMatSci/CBFV.jl/actions) [![Build Status](https://travis-ci.com/JuliaMatSci/CBFV.jl.svg?branch=master)](https://travis-ci.com/JuliaMatSci/CBFV.jl) [![Coverage](https://codecov.io/gh/JuliaMatSci/CBFV.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaMatSci/CBFV.jl)
 
 This is a Julia rewrite of the [python tool](https://github.com/kaaiian/CBFV) to create a composition-based feature vector representation for machine learning with materials science data. The ideas and methodology are discussed in the recent article:
@@ -8,11 +8,42 @@ This is a Julia rewrite of the [python tool](https://github.com/kaaiian/CBFV) to
 
 and the original python source code(s) can be found here:
 
-> https://github.com/anthony-wang/BestPractices/tree/master/notebooks/CBFV
+- [https://github.com/anthony-wang/BestPractices/tree/master/notebooks/CBFV](https://github.com/anthony-wang/BestPractices/tree/master/notebooks/CBFV)
+- [https://github.com/kaaiian/CBFV](https://github.com/kaaiian/CBFV)
 
-> https://github.com/kaaiian/CBFV
+## Example Use
 
-## Citation
+The input data set should have a least two columns with the header/names `formula` and `target`.
+
+```@example
+using DataFrames
+using CBFV
+data = DataFrame("name"=>["Rb2Te","CdCl2","LaN"],"bandgap_eV"=>[1.88,3.51,1.12])
+rename!(data,Dict("name"=>"formula","bandgap_eV"=>"target"))
+features = generatefeatures(data)
+```
+
+## Supported Featurization Schemes
+
+As with the orignal CBFV python package the following element databases are available:
+
+- `oliynyk` (default): Database from A. Oliynyk.
+- `magpie`: [Materials Agnostic Platform for Informatics and Exploration](https://bitbucket.org/wolverton/magpie/src/master/)
+- `mat2vec`:  [Word embeddings capture latent knowledge from materials science](https://github.com/materialsintelligence/mat2vec)
+- `jarvis`: [Joint Automated Repository for Various Integrated Simulations provided by U.S. National Institutes of Standards and Technologies.](https://jarvis.nist.gov/)
+- `onehot`: Simple one hot encoding scheme, i.e., diagonal elemental matrix.
+- `random_200`: 200 random elemental properties (I'm assuming).
+
+However, `CBFV.jl` will allow you to provide your own element database to featurize with. Also, the current implementation reads the saved `.csv` file in [`databases`](@ref), however, this is prone to potential issues (ex. out of date files). To alleviate this I will change the implementation to utilize `Pkg.Artificats` with a `Artificats.toml` file that enables grabbing the datafiles needed from a server if they don't exist locally already.
+
+### Julia Dependencies
+This is a relatively small package so there aren't a lot of dependencies. The required packages are:
+
+- CSV
+- DataFrames
+- ProgressBars
+
+## Citations
 Pleae cite the following when and if you use this package in your work:
 
 ```bibtex

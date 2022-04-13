@@ -4,11 +4,11 @@ using Documenter
 makedocs(;
     modules=[CBFV],
     authors="Stefan Bringuier <stefanbringuier@gmail.com> and contributors",
-    repo="https://github.com/stefanbringuier/CBFV.jl/blob/{commit}{path}#L{line}",
+    repo="https://github.com/JuliaMatSci/CBFV.jl/blob/{commit}{path}#L{line}",
     sitename="CBFV.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://stefanbringuier.github.io/CBFV.jl",
+        canonical="https://JuliaMatSci.github.io/CBFV.jl",
         assets=String[],
     ),
     pages=[
@@ -20,5 +20,5 @@ makedocs(;
 Modules = [CBFV]
 
 deploydocs(;
-    repo="github.com/stefanbringuier/CBFV.jl",
+    repo="github.com/JuliaMatSci/CBFV.jl",
 )

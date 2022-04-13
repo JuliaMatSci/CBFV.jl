@@ -17,3 +17,13 @@ using CBFV #hide
 d = DataFrame(:formula=>["Tc1V1","Cu1Dy1","Cd3N2"],:target=>[248.539,66.8444,91.5034]) #hide
 generatefeatures(d,elementdata="jarvis")
 ```
+
+Another example:
+
+```@example
+using DataFrames
+using CBFV
+data = DataFrame("name"=>["Rb2Te","CdCl2","LaN"],"bandgap_eV"=>[1.88,3.51,1.12])
+rename!(data,Dict("name"=>"formula","bandgap_eV"=>"target"))
+features = generatefeatures(data)
+```

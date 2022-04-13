@@ -1,7 +1,7 @@
 # see LICENSE
 
-"""     combinefeatures!(features,extras)
-        combinefeatures!(features,featnames,extras)
+"""     combinefeatures(features,extras)
+        combinefeatures(features,featnames,extras)
 
 
 Combines existing features in data with the prepared features. Returns additional
@@ -12,27 +12,32 @@ vector of column names for a database.
 - `extras::DataFrame`: The data frame representation of the orignial data.
 - `featnames::Vector`: The column names of the generated features.
 
-# Returns (Optional)
+# Returns
+- `newfeatures::AbstractArray`: Combined features
 - `combfeatnames::Vector{String}`: Combined names of feature columns.
 
 """
-function combinefeatures!(features::AbstractArray, extras::DataFrame)
+function combinefeatures(features::AbstractArray, extras::DataFrame)
     if checkcombineallowed(extras)
         extrasarry = Tables.matrix(extras)
-        features = hcat(features, extrasarry)
+        newfeatures = hcat(features, extrasarry)
+    else
+        newfeatures = features
     end
+    return newfeatures
 end  # function combinefeatures
 
-combinefeatures!(features::AbstractArray, featnames::Vector, extras::DataFrame) = begin
+combinefeatures(features::AbstractArray, featnames::Vector, extras::DataFrame) = begin
 
     if checkcombineallowed(extras)
         extrasarry = Tables.matrix(extras)
-        features = hcat(features, extrasarry)
+        newfeatures = hcat(features, extrasarry)
         combfeatnames = vcat(featnames, names(extras))
     else
+        newfeatures = features
         combfeatnames = featnames
     end
-    return combfeatnames
+    return newfeatures,combfeatnames
 end
 
 """
@@ -51,12 +56,12 @@ function assignfeatures(processeddata::Vector{Dict{Symbol,Any}},
     iterformulae = ProgressBar(1:length(formulae))
     skippedformula = Array{String,1}()
 
-    features = Vector{Matrix{Number}}(undef, length(formulae))
+    features = Vector{Matrix{Float64}}(undef, length(formulae))
 
-    for i in iterformulae
+    Threads.@threads for i in iterformulae
         formula = formulae[i]
-        amount = processeddata[i][:amount]
-        properties = processeddata[i][:eleprops]
+        amount = processeddata[i][:amount]::Vector{Float64}
+        properties = processeddata[i][:eleprops]::Matrix{Float64}
 
         # Each formula has a n-element by m-feature matrix representation.
         # Construct all the feature vectors
@@ -95,15 +100,20 @@ column name prefixes are fixed based on the CBFV approach which is to use the fo
 moments from the element features in the formula.
 
 # Arguments
+- `featcolnames::Vector{String}` : The name of the columns for the feature vectors
+- `features::Array{Float64,2}` : The feature vectors
+- `extrafeatures::Tuple{Bool,DataFrame}` : These are the features carried from the input data
+- `sumfeatures::Bool` : wheter or not to add sum statistics feature vector
 
 # Returns
-
+- `DataFrame` : the dataframe for the features
 
 """
 function constructfeaturedataframe(featcolnames::Vector{String},
-    features::Array{Number,2},
+    features::Array{Float64,2},
     extrafeatures::Tuple{Bool,DataFrame},
     sumfeatures::Bool)
+
     if sumfeatures
         colprefixes = ["sum_", "avg_", "dev_", "range_", "max_", "min_", "mode_"]
     else
@@ -119,10 +129,11 @@ function constructfeaturedataframe(featcolnames::Vector{String},
     dictfeatnames = Dict{String,Vector}()
 
     if extrafeatures[1]
-        combinedfeatnames = combinefeatures!(features, featnames, extrafeatures[2])
-        for (i, n) in enumerate(combinedfeatnames)
-            dictfeatnames[n] = features[i, :]
-        end
+        #combfeatures,combinedfeatnames = combinefeatures(features, featnames, extrafeatures[2])
+        #for (i, n) in enumerate(combinedfeatnames)
+        #    dictfeatnames[n] = combfeatures[:,i]
+        #end
+        @info "The combine feature is not correctly implemented and is being skipped!"
     else
         for (i, n) in enumerate(featnames)
             dictfeatnames[n] = features[:, i]
@@ -173,14 +184,6 @@ using CBFV
 d = DataFrame(:formula=>["Tc1V1","Cu1Dy1","Cd3N2"],:target=>[248.539,66.8444,91.5034])
 generatefeatures(d)
 ```
-
-
-
-
-# TODOs
-- Add dropduplicate Optional
-- Decide what to do with `skippedformulas`
-- Process elementa data features with `NaN`
 """
 function generatefeatures(data::DataFrame;
     elementdata::String="oliynyk",
@@ -189,10 +192,11 @@ function generatefeatures(data::DataFrame;
     sumfeatures=false,
     returndataframe=true)
 
+
     # Process input data
     checkdataframe(data)
     formulae = data[!, :formula]
-    featcolnames, processeddata = processinputdata(data, elementdata)
+    featcolnames, processeddata = processinputdata(dropduplicate ? unique(data) : data, elementdata)
 
     targets = [row[:target] for row in processeddata]
 
@@ -200,9 +204,10 @@ function generatefeatures(data::DataFrame;
     features, skippedformulas = assignfeatures(processeddata,
         formulae,
         sumfeatures)
-    extrafeatures = data[!, Not([:formula, :target])]
 
-    #TODO: need to fill features that are NaN with median values.
+    # Extra features from original data
+    extra_df = data[!, Not([:formula, :target])]
+    extrafeatures = dropduplicate && !isempty(extra_df) ? unique(extra_df) : extra_df
 
     if returndataframe
         generatedataframe = constructfeaturedataframe(featcolnames, features, (combine, extrafeatures), sumfeatures)
@@ -211,7 +216,8 @@ function generatefeatures(data::DataFrame;
         return generatedataframe
     else
         if combine
-            combinefeatures!(features, extrafeatures)
+            #combinefeatures(features, extrafeatures)
+            @info "The combine feature is not correctly implemented and is being skipped!"
         end
         return formulae, features, targets
     end

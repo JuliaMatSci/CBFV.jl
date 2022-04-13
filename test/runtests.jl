@@ -100,12 +100,16 @@ using CSV, DataFrames
     end # ProcessData.jl testset
 
     @testset "Featurization.jl functions" begin
-        d = DataFrame(:formula=>["Tc1V1","Cu1Dy1","Cd3N2"],:target=>[248.539,66.8444,91.5034])
+        d = DataFrame(:formula=>["Tc1V1","Cu1Dy1","Cd3N2"],
+                      :property=>[1.0,0.5,1.0],
+                      :target=>[248.539,66.8444,91.5034])
         featdb = CBFV.generatefeatures(d,returndataframe=true)
         testdb = CSV.File("pycbfv_test_data.csv") |> DataFrame
         @test length(names(featdb[!,Not([:target,:formula])])) == length(names(testdb))
         @testset "Column $n" for n in names(testdb)
             @test testdb[!,n] ≈ featdb[!,n]
         end
+       # @test CBFV.generatefeatures(d,combine=true)[!,:property] .== d[!,:property]
+
     end # Featurization.jl testset
 end

@@ -1,5 +1,24 @@
 # see LICENSE
 
+"""
+    replacemissing!(data)
+
+replace missing values in columns of a dataframe with average value of that column.
+
+# Arguments
+- `data::DataFrame`: data frame with missing values.
+
+# Modifies
+- `data::DataFrame`: changes `missing` values to mane values of column.
+
+""" function replacemissing!(data::DataFrame)
+    
+    columnnames = names(data[!, Not(:element)])
+    statdata = describe(data);
+    for (i,n) in enumerate(columnnames)
+        data[!,n] = coalesce.(data[!,n],statdata[i,:mean])
+    end
+end
 
 """
         removeunsupported!(datainput,elementproperties)
@@ -17,7 +36,7 @@ Handle cases where compound can't be processed because it isn't an allowed eleme
 function removeunsupported!(datainput::DataFrame)
 
     formulas = copy(datainput[!, :formula])
-    rows = range(1, nrow(datainput))
+    rows = range(1, nrow(datainput),step=1)
     splitformulas = keys.(getrepresentation.(formulas))
 
     for i = 1:length(formulas)
@@ -47,12 +66,13 @@ returns an array of properties for elements that are in a formula.
 
 """
 function extractproperties(elements::Vector{String},
-    properties::AbstractArray,
-    formulaelements::Array{String,1},
-    formula::String)
+                           properties::Array{T,2},
+                           formulaelements::Array{String,1},
+                           formula::String) where T<:Number
+    
     _, m = size(properties)
     l = length(formulaelements)
-    extractedproperties = Array{Number,2}(undef, l, m)
+    extractedproperties = Array{Float64,2}(undef, l, m)
 
     for (i, e) in enumerate(formulaelements)
         if stripamt(e) ∉ elements
@@ -106,10 +126,12 @@ of the entire database.
 - `arrayrepresentation::Array{Any,2}`: representation of the dataframe
 
 """
-function processelementdatabase(data::DataFrame)
+function processelementdatabase(data::DataFrame;replacemissing=true)
 
-    columnnames = names(data[!, Not(:element)])
-
+    if replacemissing
+        replacemissing!(data)
+    end
+    
     elementsymbols = convert(Vector{String}, data[!, :element])
     elementindex = collect(1:nrow(data))
     elementmissing = collect(setdiff(
@@ -122,17 +144,19 @@ function processelementdatabase(data::DataFrame)
 
     arrayrepresentation = Tables.matrix(data[!, Not(:element)])
 
+    columnnames = names(data[!, Not(:element)])
+
     return elementinfo, columnnames, arrayrepresentation
 end # function processelementdatabase
 
-processelementdatabase(databasename::String) = begin
+processelementdatabase(databasename::String;kwargs...) = begin
     data = getelementpropertydatabase(databasename)
-    processelementdatabase(data)
+    processelementdatabase(data,kwargs...)
 end
 
-processelementdatabase(databasepath::FileName) = begin
+processelementdatabase(databasepath::FileName;kwargs...) = begin
     data = readdatabasefile(databasepath.fullpath)
-    processelementdatabase(data)
+    processelementdatabase(data,kwargs...)
 end
 
 

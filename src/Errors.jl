@@ -8,8 +8,8 @@ function checkdataframe(dataframe::DataFrame)
 end
 
 function checkcombineallowed(dataframe::DataFrame)
-    extrprops = dataframe[!,Not([:formula,:target])]
-    if !isempty(extrprops)
+    #extrprops = dataframe[!,Not([:formula,:target])]
+    if !isempty(dataframe)
         return true
     else
         @warn "Combining of features requested but none exist, skipping!"
