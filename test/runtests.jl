@@ -108,12 +108,19 @@ using CSV, DataFrames
         tmpfile = tempname()
         CSV.write(tmpfile,d)
         @test featdb == CBFV.generatefeatures(tmpfile,returndataframe=true)
-     
+        
+        @test CBFV.generatefeatures(d,combine=true)[!,:property] == d[!,:property]
+
         testdb = CSV.File("pycbfv_test_data.csv") |> DataFrame
         @test length(names(featdb[!,Not([:target,:formula])])) == length(names(testdb))
         @testset "Column $n" for n in names(testdb)
             @test testdb[!,n] ≈ featdb[!,n]
         end
+
+        featdb_ext = CBFV.generatefeatures(d,
+                                           elementdata=CBFV.FileName((@__DIR__)*"/../databases/oliynyk.csv"))
+        @test featdb_ext == featdb
+
 
     end # Featurization.jl testset
 end

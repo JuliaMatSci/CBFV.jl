@@ -27,3 +27,15 @@ data = DataFrame("name"=>["Rb2Te","CdCl2","LaN"],"bandgap_eV"=>[1.88,3.51,1.12])
 rename!(data,Dict("name"=>"formula","bandgap_eV"=>"target"))
 features = generatefeatures(data)
 ```
+
+Here is an example with an existing feature combined with the generated features:
+
+```@example
+using DataFrames
+using CBFV
+data = DataFrame(:formula=>["B2O3","Be1I2","Be1F3Li1"],
+                 :temperature=>[1400.00,1200.0,1100.00],
+                 :heat_capacity=>[89.115,134.306,192.464])
+rename!(data,Dict(:heat_capacity=>:target))
+features = generatefeatures(data,combine=true)
+```

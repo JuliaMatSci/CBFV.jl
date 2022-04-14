@@ -6,6 +6,7 @@ using CSV
 using DataFrames
 
 export FileName
+export readdatabasefile
 export processelementdatabase
 export processinputdata
 export generatefeatures

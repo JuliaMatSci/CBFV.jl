@@ -47,11 +47,22 @@ end
 This is the primary function that assigns the features based on the CBFV approach. For more
 details its best to see the original python CBFV and references in README file.
 
+# Arguments
+- `processeddata::Vector{Dict{Symbol,Any}}` : the formulas processed against elemental database
+- `formulae::AbstractArray` : the formula string values, this should be some subtype of `Array{String,1}`
+- `sumfeatures::Bool=false` : wheter to create a `sum_` feature vector
+
+# Returns
+- `featuresarry::Vector{Matrix{Float64}}` : feature vectors for each row in original data set.
+- `skippedformula::Vector{String}` : skipped formulas
+
+!!! note
+    The `generatefeatures` call does not do anything (i.e. return) the skippedformulas.
 
 """
 function assignfeatures(processeddata::Vector{Dict{Symbol,Any}},
-    formulae::Array{String,1},
-    sumfeatures::Bool=false)
+                        formulae::AbstractArray,
+                        sumfeatures::Bool=false)
 
     iterformulae = ProgressBar(1:length(formulae))
     skippedformula = Array{String,1}()
@@ -69,11 +80,11 @@ function assignfeatures(processeddata::Vector{Dict{Symbol,Any}},
         fmax = maximum(properties, dims=1)
         fmin = minimum(properties, dims=1)
         _, fraccomp = fractionalcomposition(formula)
-        favg = sum(fraccomp .* properties, dims=1)
+        favg = sum(fraccomp .* properties, dims=1) #FIX: Not sure whats going on here
         fdev = sum(fraccomp .* abs.(properties .- favg), dims=1)
+
         prominant = isapprox.(fraccomp, maximum(fraccomp))
         fmode = minimum(properties[prominant, :], dims=1)
-
         fweight = sumfeatures ? sum(amount .* properties, dims=1) : amount .* properties
 
         if sumfeatures
@@ -110,9 +121,9 @@ moments from the element features in the formula.
 
 """
 function constructfeaturedataframe(featcolnames::Vector{String},
-    features::Array{Float64,2},
-    extrafeatures::Tuple{Bool,DataFrame},
-    sumfeatures::Bool)
+                                   features::Array{Float64,2},
+                                   extrafeatures::Tuple{Bool,DataFrame},
+                                   sumfeatures::Bool)
 
     if sumfeatures
         colprefixes = ["sum_", "avg_", "dev_", "range_", "max_", "min_", "mode_"]
@@ -143,7 +154,6 @@ end  # function constructfeaturedataframe
 
 """
     generatefeatures(data; elementdata,dropduplicate,combine,sumfeatures,returndataframe)
-    generatefeatures(data, elementdata; kwargs...)
     generatefeatures(dataname; kwargs...)
 
 This is the primary function for generating the CBFV features for a dataset of formulas with or without
@@ -157,7 +167,7 @@ assigning of features is then executed based on the CBFV approach. If the `retur
 
 # Arguments
 - `data::DataFrame`: This is the data set that you want to be featurized for example.
-- `elementdata::Union{String,FileName}`: The name of the internal database or the file path and
+- `elementdata::Union{String,FileName} or Union{String,DataFrame}`: The name of the internal database or the file path and
 name to an external database.
 - `dropduplicate::Bool=true`: Option to drop duplicate entries.
 - `combine::Bool=false`: Option to combine existing features in `data` with the generated feature set.
@@ -184,18 +194,25 @@ d = DataFrame(:formula=>["Tc1V1","Cu1Dy1","Cd3N2"],:target=>[248.539,66.8444,91.
 generatefeatures(d)
 ```
 """
-function generatefeatures(data::DataFrame;
-    elementdata::String="oliynyk",
-    dropduplicate=true,
-    combine=false,
-    sumfeatures=false,
-    returndataframe=true)
+function generatefeatures(data::DataFrame,
+                          elementdata::Union{String,DataFrame}="oliynyk";
+                          dropduplicate=true,
+                          combine=false,
+                          sumfeatures=false,
+                          returndataframe=true)
 
+    # Remove duplicate entries
+    if dropduplicate
+        moddata = unique(data)
+    else 
+        moddata = data
+
+    end
 
     # Process input data
     checkdataframe(data)
-    formulae = data[!, :formula]
-    featcolnames, processeddata = processinputdata(dropduplicate ? unique(data) : data, elementdata)
+    formulae = moddata[!, :formula]
+    featcolnames, processeddata = processinputdata(moddata, elementdata)
 
     targets = [row[:target] for row in processeddata]
 
@@ -205,8 +222,7 @@ function generatefeatures(data::DataFrame;
         sumfeatures)
 
     # Extra features from original data
-    extra_df = dropduplicate ? unique(data) : data
-    extrafeatures = extra_df[!, Not([:formula, :target])]
+    extrafeatures = moddata[!, Not([:formula, :target])]
     if combine checkifempty(extrafeatures) end
 
     if returndataframe
@@ -223,11 +239,30 @@ function generatefeatures(data::DataFrame;
 
 end  # function generatefeaturesdata 
 
-# Issue #4 TODO: Work in support for custom element data sets. Requires
-# working back through `generatefeatures`-> `processinputdata` -> ....
-# generatefeatures(data::DataFrame, elementdata::FileName; kwargs...) = begin
-#    generatefeatures(data, elementdata=elementdata, kwargs...)
-# end
+
+generatefeatures(data::DataFrame;
+                 elementdata::Union{FileName,String}="oliynyk",
+                 dropduplicate=true,
+                 combine=false,
+                 sumfeatures=false,
+                returndataframe=true) = begin
+    if typeof(elementdata) == FileName
+        elementdataframe = readdatabasefile(elementdata.fullpath)
+        generatefeatures(data,elementdataframe,
+                        dropduplicate=dropduplicate,
+                        combine=combine,
+                        sumfeatures=sumfeatures,
+                        returndataframe=returndataframe)
+    else
+        generatefeatures(data,elementdata,
+                        dropduplicate=dropduplicate,
+                        combine=combine,
+                        sumfeatures=sumfeatures,
+                        returndataframe=returndataframe)
+    end
+
+end
+
 
 generatefeatures(dataname::String; kwargs...) = begin
     # Digest data file before processing
